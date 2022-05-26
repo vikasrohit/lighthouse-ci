@@ -9,6 +9,10 @@
   width: 50%;
 }
 
+.metric-line-graph.full-width {
+  width: 100%;
+}
+
 #storybook-test-root .metric-line-graph {
   width: 100%;
 }

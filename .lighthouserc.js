@@ -1,16 +1,18 @@
-/**
- * @license Copyright 2019 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
- */
-'use strict';
-
 module.exports = {
   ci: {
+    collect: {
+      numberOfRuns: 1,
+      settings: {
+        chromeFlags: '--disk-cache-size=0 --no-sandbox --headless --disable-dev-shm-usage --disable-gpu',
+      },
+      url: ['https://www.integration.propertyguru.com.sg/singapore-property-listing/hdb'],
+    },
     assert: {
-      preset: 'lighthouse:recommended',
       assertions: {
-        'dom-size': ['error', {maxNumericValue: 3000}],
+	'categories:performance': 'off',
+    	'categories:accessibility': 'off',
+        'cumulative-layout-shift':["warn"],
+        'first-contentful-paint':'on',
 
         'csp-xss': 'off',
         'unsized-images': 'off',
@@ -36,11 +38,11 @@ module.exports = {
       },
     },
     upload: {
-      urlReplacementPatterns: [
-        's/[0-9a-f]{12}$/HASH/',
-        's#:[0-9]{3,5}/#:PORT/#',
-        's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/UUID/ig',
-      ],
+      target: 'lhci',
+      serverBaseUrl: 'http://localhost:9009',
+      token: 'f688c6b2-232b-44e6-875c-48b7a9ebf1fc', // could also use LHCI_TOKEN variable instead,
+      githubStatusTemplate: { 'cumulative-layout-shift' : 'score', 'first-contentful-paint' : 'score' },
+      ignoreDuplicateBuildFailure: true,
     },
   },
 };

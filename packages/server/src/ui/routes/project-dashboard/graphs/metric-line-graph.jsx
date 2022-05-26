@@ -48,6 +48,8 @@ const STROKE_DASHARRAY_OPTIONS = [
  * @prop {import('preact/hooks/src').StateUpdater<string|undefined>} setSelectedBuildId
  * @prop {import('preact/hooks/src').StateUpdater<boolean>} setPinned
  * @prop {import('preact/hooks/src').StateUpdater<number>} setMetricIndex
+ * @prop {string} [unit='seconds']
+ * @prop {boolean} [fullWidth=false]
  */
 
 /**
@@ -66,18 +68,21 @@ function buildXScale(graphWidth, data) {
  * @param {LineGraphData} data
  */
 function renderLineGraph(rootEl, data) {
-  const {metrics} = data;
+  const {metrics,  unit } = data;
   const {svg, masks, graphWidth, graphHeight} = createRootSvg(rootEl, GRAPH_MARGIN);
 
   const yMax = Math.max(...metrics.map(m => Math.max(...m.statistics.map(s => s.value))));
-  const yMaxSeconds = Math.ceil((yMax * 1.1) / 1000);
-
+  console.log(unit, 'unit')
+  const yMaxUnits = unit === 'seconds' ? Math.ceil((yMax * 1.1) / 1000) : Math.round(yMax * 100 * 1.1) / 100;
+  console.log(yMaxUnits, 'yMaxUnits')
   const xScale = buildXScale(graphWidth, data);
-  const yScale = d3.scaleLinear().domain([0, yMaxSeconds]).range([graphHeight, 0]);
+  const yScale = d3.scaleLinear().domain([0, yMaxUnits]).range([graphHeight, 0]);
+  const yFormat = yMax < 1 ? '.3f' : '.0f';
+  const yUnit = unit === 'unitless' ? '' : 's'
   const yAxis = d3
     .axisRight(yScale)
-    .ticks(Math.min(yMaxSeconds, 6))
-    .tickFormat(d => d3.format('.0f')(d) + 's')
+    .ticks(Math.min(yMaxUnits > 1.0 ? yMaxUnits : 10, 6))
+    .tickFormat(d => d3.format(yFormat)(d) + yUnit)
     .tickSize(0);
   /** @type {() => import('d3').Line<StatisticWithBuild>} */
   const statisticLine = d3.line;
@@ -106,7 +111,7 @@ function renderLineGraph(rootEl, data) {
     const metricLine = statisticLine()
       .curve(d3.curveMonotoneX)
       .x(d => xScale(metric.statistics.indexOf(d)))
-      .y(d => yScale(d.value / 1000));
+      .y(d => yScale(unit === 'seconds'? d.value / 1000 : d.value));
 
     // The plain gray line of the metric values
     svg
@@ -132,7 +137,7 @@ function renderLineGraph(rootEl, data) {
     const scoreSectionMaskFills = [
       {type: 'pass', start: yScale(0), end: passThreshold},
       {type: 'average', start: passThreshold, end: averageThreshold},
-      {type: 'fail', start: averageThreshold, end: yScale(yMaxSeconds)},
+      {type: 'fail', start: averageThreshold, end: yScale(yMaxUnits)},
     ];
 
     for (const scoreSectionMaskFill of scoreSectionMaskFills) {
@@ -148,6 +153,8 @@ function renderLineGraph(rootEl, data) {
         .attr('class', `metric-line-graph__mask-fill--${scoreSectionMaskFill.type}`);
     }
   }
+
+  console.log('metrics[0].statistics', metrics[0].statistics)
 
   appendHoverCardHitboxElements(
     rootEl,
@@ -173,7 +180,7 @@ function renderLineGraph(rootEl, data) {
     if (!graphContainer) return;
     const graphY = d3.mouse(graphContainer)[1];
     const yValue = yScale.invert(graphY);
-    updateMetricIndex(i, yValue * 1000);
+    updateMetricIndex(i, unit === 'seconds'? yValue / 1000 : yValue);
   });
 }
 
@@ -217,8 +224,12 @@ const HoverCardWithMetricValue = props => {
   const statistics = selectedMetric && selectedMetric.statistics;
   const statistic = statistics && statistics.find(s => s.buildId === props.selectedBuildId);
   const build = statistic && statistic.build;
+  const unit = props.unit;
 
   let children = <Fragment />;
+  console.log(selectedMetric, 'selectedMetric');
+  console.log(statistic, 'statistic');
+  console.log(unit, 'unit');
   if (selectedMetric && statistic) {
     children = (
       <div className="metric-line-graph__hover-card-data">
@@ -229,9 +240,9 @@ const HoverCardWithMetricValue = props => {
             <span>Not Available</span>
           ) : (
             <Fragment>
-              {statistic.value.toLocaleString(undefined, {maximumFractionDigits: 0})}
+              {statistic.value.toLocaleString(undefined, {maximumFractionDigits: 3})}
               <Nbsp />
-              ms
+              { unit === 'seconds' ? 'ms' : '' }
             </Fragment>
           )}
         </div>
@@ -252,9 +263,11 @@ export const MetricLineGraph = props => {
   const firstStat = props.metrics[0].statistics[0];
   const lastStat = props.metrics[0].statistics[props.metrics[0].statistics.length - 1];
   const [selectedMetricIndex, setMetricIndex] = useState(props.__selectedMetricIndexForTest || -1);
+  const fullWidthClass = props.fullWidth ? 'full-width' : '';
+  const className = `metric-line-graph graph-root-el ${fullWidthClass}`;
 
   return (
-    <div className="metric-line-graph graph-root-el" onMouseLeave={() => setMetricIndex(-1)}>
+    <div className={className} onMouseLeave={() => setMetricIndex(-1)}>
       <HoverCardWithMetricValue {...props} selectedMetricIndex={selectedMetricIndex} />
       <D3Graph
         className="metric-line-graph__graph"

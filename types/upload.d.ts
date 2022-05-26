@@ -29,6 +29,7 @@ declare global {
         githubAppUrl?: string;
         githubStatusContextSuffix?: string;
         urlReplacementPatterns: string[];
+        githubStatusTemplate: Record<string, string>;
       }
 
       export interface ManifestEntrySummary {

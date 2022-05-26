@@ -225,10 +225,11 @@ function getGitHubContext(urlLabel, options) {
  * @return {Promise<void>}
  */
 async function runGithubStatusCheck(options, targetUrlMap) {
-  const {githubToken, githubAppToken, githubApiHost, githubAppUrl} = options;
+  const {githubToken, githubAppToken, githubApiHost, githubAppUrl, githubStatusTemplate} = options;
   const hash = getCurrentHash();
   const slug = getGitHubRepoSlug(githubApiHost);
 
+  console.log('DEBUG');
   if (!githubToken && !githubAppToken) {
     return print('No GitHub token set, skipping GitHub status check.\n');
   }
@@ -243,6 +244,7 @@ async function runGithubStatusCheck(options, targetUrlMap) {
     (a, b) => a[0].url.length - b[0].url.length
   );
 
+  // console.log(groupedResults)
   if (groupedResults.length) {
     for (const group of groupedResults) {
       const rawUrl = group[0].url;
@@ -252,9 +254,21 @@ async function runGithubStatusCheck(options, targetUrlMap) {
       const state = failedResults.length ? 'failure' : 'success';
       const context = getGitHubContext(urlLabel, options);
       const warningsLabel = warnResults.length ? ` with ${warnResults.length} warning(s)` : '';
-      const description = failedResults.length
+      let description = failedResults.length
         ? `Failed ${failedResults.length} assertion(s)`
         : `Passed${warningsLabel}`;
+      const customMessage = [];
+      if (githubStatusTemplate) {
+        for (const audit of group) {
+          if (audit.auditId && githubStatusTemplate[audit.auditId]) {
+            customMessage.push(`${audit.auditTitle} : ${audit.actual}`);
+          }
+        }
+      }
+      if (customMessage.length > 0) {
+        description = customMessage.join(', ');
+      }
+      console.log(description);
       const targetUrl = targetUrlMap.get(rawUrl) || rawUrl;
 
       await postStatusToGitHub({

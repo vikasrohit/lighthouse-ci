@@ -64,6 +64,8 @@ const MetricLineGraphs = props => {
         setPinned={props.setPinned}
         selectedBuildId={props.selectedBuildId}
         setSelectedBuildId={props.setSelectedBuildId}
+        unit='seconds'
+        fullWidth={true}
         metrics={[
           {
             abbreviation: 'FCP',
@@ -96,6 +98,7 @@ const MetricLineGraphs = props => {
         setPinned={props.setPinned}
         selectedBuildId={props.selectedBuildId}
         setSelectedBuildId={props.setSelectedBuildId}
+        unit='seconds'
         metrics={[
           {
             abbreviation: 'TBT',
@@ -111,6 +114,21 @@ const MetricLineGraphs = props => {
           },
         ]}
       />
+      <MetricLineGraph
+        pinned={props.pinned}
+        setPinned={props.setPinned}
+        selectedBuildId={props.selectedBuildId}
+        setSelectedBuildId={props.setSelectedBuildId}
+        unit='unitless'
+        metrics={[
+          {
+            abbreviation: 'CLS',
+            label: 'Cumulative Layout Shift',
+            statistics: stats('audit_cumulative-layout-shift_median'),
+            scoreLevels: SCORE_LEVEL_METRIC_THRESHOLDS['cumulative-layout-shift'],
+          },
+        ]}
+      />
     </Fragment>
   );
 };
@@ -119,6 +137,7 @@ const MetricLineGraphs = props => {
 const MetricDistributionGraphs = props => {
   /** @param {LHCI.ServerCommand.Statistic['name']} name */
   const stats = name => props.statistics.filter(s => s.name === name);
+  console.log(stats('audit_cumulative-layout-shift_median'))
 
   return (
     <Fragment>
@@ -157,6 +176,12 @@ const MetricDistributionGraphs = props => {
         label={'Max Potential FID'}
         statistics={stats('audit_max-potential-fid_median')}
         scoreLevels={SCORE_LEVEL_METRIC_THRESHOLDS['max-potential-fid']}
+      />
+      <MetricDistributionGraph
+        abbreviation={'CLS'}
+        label={'Cumulative Layout Shift'}
+        statistics={stats('audit_cumulative-layout-shift_median')}
+        scoreLevels={SCORE_LEVEL_METRIC_THRESHOLDS['cumulative-layout-shift']}
       />
     </Fragment>
   );

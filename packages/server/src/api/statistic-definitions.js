@@ -123,6 +123,7 @@ const definitions = {
   audit_interactive_median: auditNumericValueMedian('interactive'),
   'audit_speed-index_median': auditNumericValueMedian('speed-index'),
   'audit_first-contentful-paint_median': auditNumericValueMedian('first-contentful-paint'),
+  'audit_cumulative-layout-shift_median': auditNumericValueMedian('cumulative-layout-shift'),
   'audit_largest-contentful-paint_median': auditNumericValueMedian('largest-contentful-paint'),
   'audit_total-blocking-time_median': auditNumericValueMedian('total-blocking-time'),
   'audit_max-potential-fid_median': auditNumericValueMedian('max-potential-fid'),

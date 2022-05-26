@@ -60,6 +60,7 @@ declare global {
         | 'meta_lighthouse_version'
         | 'audit_interactive_median'
         | 'audit_first-contentful-paint_median'
+        | 'audit_cumulative-layout-shift_median'
         | 'audit_speed-index_median'
         | 'audit_largest-contentful-paint_median'
         | 'audit_total-blocking-time_median'
